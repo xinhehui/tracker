@@ -6,6 +6,6 @@ class Test {
     console.log(this.msg)
   }
 }
-dd
+ddw
 const test = new Test()
 test.output()

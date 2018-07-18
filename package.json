@@ -14,7 +14,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "lint-staged": {
-    "src/**": [
+    "src/*.js": [
       "eslint --ext .js --fix",
       "git add"
     ]
