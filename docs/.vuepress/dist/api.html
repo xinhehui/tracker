@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>jsbridge | 配置</title>
+    <meta name="description" content="app与web的交互库">
+    
+    
+    <link rel="preload" href="/assets/css/5.styles.5a691df2.css" as="style"><link rel="preload" href="/assets/js/app.cb92f64f.js" as="script"><link rel="preload" href="/assets/js/3.d5045771.js" as="script"><link rel="prefetch" href="/assets/js/0.14ae3e8b.js"><link rel="prefetch" href="/assets/js/1.d879e915.js"><link rel="prefetch" href="/assets/js/2.a112a0a9.js"><link rel="prefetch" href="/assets/js/4.9b14c522.js">
+    <link rel="stylesheet" href="/assets/css/5.styles.5a691df2.css">
+  </head>
+  <body>
+    <div id="app" data-server-rendered="true"><div class="theme-container"><header class="navbar"><div class="sidebar-button"><svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" viewBox="0 0 448 512" class="icon"><path fill="currentColor" d="M436 124H12c-6.627 0-12-5.373-12-12V80c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12zm0 160H12c-6.627 0-12-5.373-12-12v-32c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12zm0 160H12c-6.627 0-12-5.373-12-12v-32c0-6.627 5.373-12 12-12h424c6.627 0 12 5.373 12 12v32c0 6.627-5.373 12-12 12z"></path></svg></div><a href="/" class="home-link router-link-active"><!----><span class="site-name">
+      jsbridge
+    </span></a><div class="links"><div class="search-box"><input aria-label="Search" autocomplete="off" spellcheck="false" value=""><!----></div><!----></div></header><div class="sidebar-mask"></div><div class="sidebar"><!----><ul class="sidebar-links"><li><a href="/intro.html" class="sidebar-link">介绍</a></li><li><a href="/simple-use.html" class="sidebar-link">开始使用</a></li><li><a href="/api.html" class="active sidebar-link">API</a><ul class="sidebar-sub-headers"><li class="sidebar-sub-header"><a href="/api.html#配置" class="sidebar-link">配置</a></li><li class="sidebar-sub-header"><a href="/api.html#实例方法" class="sidebar-link">实例方法</a></li><li class="sidebar-sub-header"><a href="/api.html#事件" class="sidebar-link">事件</a></li></ul></li><li><a href="/xhh-jsbridge.html" class="sidebar-link">鑫合汇的交互</a></li></ul></div><div class="page"><div class="content"><h2 id="配置"><a href="#配置" aria-hidden="true" class="header-anchor">#</a> 配置</h2><ul><li><p>name</p><p>挂载的全局对象名</p></li><li><p>triggerExtend</p><p>app调用js的方法扩展</p></li><li><p>extend
+js调用app方法的扩展</p></li><li><p>plugins</p><p>插件</p></li><li><p>debug</p><p>默认false，为true时默认会开启printMsg插件，打印app和web的信息</p></li></ul><h2 id="实例方法"><a href="#实例方法" aria-hidden="true" class="header-anchor">#</a> 实例方法</h2><ul><li><p>trigger</p><p>app调用js方法</p></li><li><p>putData</p><p>传值给app</p></li><li><p>getData</p><p>从app获取数据</p></li><li><p>goToNative</p><p>跳转到原生页面</p></li><li><p>goToExtraNative</p><p>跳转到原生对应的类（应对突发情况）</p></li><li><p>doAction</p><p>调用app的方法</p></li><li><p>getCallBack</p><p>获取回调函数</p></li><li><p>addCallback</p><p>添加回调函数</p></li><li><p>on
+监听jsbridge触发的事件
+回调函数若为箭头函数，可使用this</p><div class="language- extra-class"><pre class="language-text"><code>instance.on('event', function(d){})
+</code></pre></div></li></ul><h2 id="事件"><a href="#事件" aria-hidden="true" class="header-anchor">#</a> 事件</h2><h4 id="使用方法"><a href="#使用方法" aria-hidden="true" class="header-anchor">#</a> 使用方法</h4><p><a href="/simple-use.html#示例">示例</a></p><h4 id="事件类型"><a href="#事件类型" aria-hidden="true" class="header-anchor">#</a> 事件类型</h4><ul><li><p>appLoaded</p><p>app webview 加载结束会 trigger('loaded'), javascript 触发 appLoaded 事件。
+对于 wkwebview， 此时 cookie 已加载成功</p></li><li><p>subTitleClick</p><p>点击头部副标题，触发 subTitleClick 事件</p></li><li><p>jsLoaded</p><p>javascript第一次调用app方法(appData)成功，触发 jsLoaded 事件， 表明交互可用</p></li><li><p>cookieLoaded</p><p>默认获取app的cookie，成功触发 cookieLoaded 事件</p></li></ul><h4 id="关于cookie的说明"><a href="#关于cookie的说明" aria-hidden="true" class="header-anchor">#</a> 关于cookie的说明</h4><p><strong>ios</strong></p><p>uiwebview 默认在所有请求中加入cookie</p><p>wkwebview 默认会在 document 对象中注入 cookie ，对于页面初始化需要发送 ajax 请求的页面，
+需在 cookie 注入成功后加载。可在 appLoaded 和 cookieLoaded 中去启动webapp</p></div><div class="page-edit"><!----><!----></div><div class="page-nav"><p class="inner"><span class="prev">
+        ← <a href="/simple-use.html" class="prev">
+          开始使用
+        </a></span><span class="next"><a href="/xhh-jsbridge.html">
+          鑫合汇的交互
+        </a> →
+      </span></p></div></div></div></div>
+    <script src="/assets/js/3.d5045771.js" defer></script><script src="/assets/js/app.cb92f64f.js" defer></script>
+  </body>
+</html>
