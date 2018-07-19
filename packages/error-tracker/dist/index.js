@@ -4,10 +4,10 @@
  * Released under the MIT License.
  */
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
-  typeof define === 'function' && define.amd ? define(factory) :
-  (global.ErrorTracker = factory());
-}(this, (function () { 'use strict';
+  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
+  typeof define === 'function' && define.amd ? define(['exports'], factory) :
+  (factory((global.ErrorTracker = {})));
+}(this, (function (exports) { 'use strict';
 
   /**
    * debounce
@@ -900,12 +900,26 @@
     ref: path(doc.referrer) || '-',
     clnt: webDetector.device.name + '/' + webDetector.device.fullVersion + '|' + webDetector.os.name + '/' + webDetector.os.fullVersion + '|' + webDetector.browser.name + '/' + webDetector.browser.fullVersion + '|' + webDetector.engine.name + '/' + webDetector.engine.fullVersion + (webDetector.browser.compatible ? '|c' : ''),
     v: version
+  };
+  function post(url, params, cb) {
+    var http = new window.XMLHttpRequest();
+    http.open('POST', url, true);
+    //Send the proper header information along with the request
+    http.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
 
-    // 创建 HTTP GET 请求发送数据。
-    // @param {String} url, 日志服务器 URL 地址。
-    // @param {Object} data, 附加的监控数据。
-    // @param {Function} callback
-  };function send(host, data, callback) {
+    http.onreadystatechange = function () {
+      //Call a function when the state changes.
+      if (http.readyState == 4 && http.status == 200) {
+        cb(http.responseText);
+      }
+    };
+    http.send(params);
+  }
+  // 创建 HTTP GET 请求发送数据。
+  // @param {String} url, 日志服务器 URL 地址。
+  // @param {Object} data, 附加的监控数据。
+  // @param {Function} callback
+  function send(host, data, callback) {
     if (!callback) {
       callback = function callback() {};
     }
@@ -924,14 +938,18 @@
     }
 
     // @see http://www.javascriptkit.com/jsref/image.shtml
-    var img = new Image(1, 1);
-    img.onload = img.onerror = img.onabort = function () {
-      callback();
-      img.onload = img.onerror = img.onabort = null;
-      img = null;
-    };
+    // 暂时先用post
+    // var img = new window.Image(1, 1)
+    // img.onload = img.onerror = img.onabort = function () {
+    //   callback()
+    //   img.onload = img.onerror = img.onabort = null
+    //   img = null
+    // }
 
-    img.src = url;
+    // img.src = url
+    post(url, d, function () {
+      callback();
+    });
   }
 
   var sending = false;
@@ -975,6 +993,62 @@
   timedSend();
 
   var M$1 = M;
+
+  /**
+   *
+   * vue里的插件
+   * 用法如下
+   * 在html中引入
+   * <script type="text/javascript" src="http://npmprivate.xinhehui.com/error-tracker/packages/error-tracker/dist/index.js"></script>
+  <script>
+  var errorTracker = new ErrorTracker.Handle({
+    concat: false,
+    server: 'http://localhost:10086/demo/demo/vertical.jpg',
+    report: function (errorLogs) {
+      var error = errorLogs[0]
+      let mapJS = undefined
+      if (error.stack != 'no stack') {
+        const stack = error.stack.split(/[\n]/)
+        mapJS = stack[1].match(/\((.*)js/)
+        if (mapJS) mapJS = mapJS[1] + 'js.map'
+      }
+      ErrorTracker.Handle.log(Object.assign(error, {profile: 'log', mapjs: mapJS, type: error.type}))
+    }
+  })
+  在main.js中传入Vue对象
+   * window.ErrorTracker.vueHandle((error) => {
+    window.ErrorTracker.Handle.error(error)
+  }, Vue)
+  **/
+  function formatComponentName(vm) {
+    if (vm.$root === vm) {
+      return 'root instance';
+    }
+    var name = vm._isVue ? vm.$options.name || vm.$options._componentTag : vm.name;
+    return (name ? 'component <' + name + '>' : 'anonymous component') + (vm._isVue && vm.$options.__file ? ' at ' + vm.$options.__file : '');
+  }
+
+  function vuePlugin(cb, Vue) {
+    Vue = Vue || window.Vue;
+
+    // quit if Vue isn't on the page
+    if (!Vue || !Vue.config) return;
+
+    Vue.config.errorHandler = function VueErrorHandler(error, vm, info) {
+      var metaData = {};
+
+      // vm and lifecycleHook are not always available
+      if (Object.prototype.toString.call(vm) === '[object Object]') {
+        metaData.componentName = formatComponentName(vm);
+        metaData.propsData = vm.$options.propsData;
+      }
+
+      if (typeof info !== 'undefined') {
+        metaData.lifecycleHook = info;
+      }
+      cb(error, metaData);
+    };
+  }
 
   var classCallCheck = function (instance, Constructor) {
     if (!(instance instanceof Constructor)) {
@@ -1035,7 +1109,7 @@
   var debug = "production" === 'development';
   function __config(opts) {
     merge(opts, config$1);
-    if (!opts.server) throw "不存在server参数";
+    if (!opts.server) throw new Error('不存在server参数');
     M$1.server = opts.server;
 
     if (debug) {
@@ -1156,15 +1230,15 @@
     return Math.random() < (sampling || 1);
   }
 
-  var errorHandle = function () {
-    function errorHandle(opts) {
-      classCallCheck(this, errorHandle);
+  var Handle = function () {
+    function Handle(opts) {
+      classCallCheck(this, Handle);
 
       __config(opts);
       this.init();
     }
 
-    createClass(errorHandle, [{
+    createClass(Handle, [{
       key: 'init',
       value: function init() {
         __init();
@@ -1183,10 +1257,18 @@
       value: function log() {
         M$1.log.apply(M$1, arguments);
       }
+    }, {
+      key: 'error',
+      value: function error(_error) {
+        handleError(formatTryCatchError(_error));
+      }
     }]);
-    return errorHandle;
+    return Handle;
   }();
 
-  return errorHandle;
+  exports.vueHandle = vuePlugin;
+  exports.Handle = Handle;
+
+  Object.defineProperty(exports, '__esModule', { value: true });
 
 })));

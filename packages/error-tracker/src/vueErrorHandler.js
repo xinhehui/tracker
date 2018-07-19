@@ -1,21 +1,30 @@
-import jstracker from 'jstracker'
-import M from './send'
-const debug = process.env.NODE_ENV === 'production'
-jstracker.init({
+
+/**
+ *
+ * vue里的插件
+ * 用法如下
+ * 在html中引入
+ * <script type="text/javascript" src="http://npmprivate.xinhehui.com/error-tracker/packages/error-tracker/dist/index.js"></script>
+<script>
+var errorTracker = new ErrorTracker.Handle({
   concat: false,
+  server: 'http://localhost:10086/demo/demo/vertical.jpg',
   report: function (errorLogs) {
-    M.server = 'http://localhost:10086/demo/demo/vertical.jpg'
-    if (debug) {
-      console.warn('send', errorLogs)
-    } else {
-      const stack = errorLogs[0].stack.split(/[\n]/)
-      let mapJS = stack[1].match(/\((.*)js/)
-      mapJS = mapJS[1] + 'js.map'
-      M.log(Object.assign(errorLogs[0], {profile: 'log', mapjs: mapJS}))
+    var error = errorLogs[0]
+    let mapJS = undefined
+    if (error.stack != 'no stack') {
+      const stack = error.stack.split(/[\n]/)
+      mapJS = stack[1].match(/\((.*)js/)
+      if (mapJS) mapJS = mapJS[1] + 'js.map'
     }
+    ErrorTracker.Handle.log(Object.assign(error, {profile: 'log', mapjs: mapJS, type: error.type}))
   }
 })
-
+在main.js中传入Vue对象
+ * window.ErrorTracker.vueHandle((error) => {
+  window.ErrorTracker.Handle.error(error)
+}, Vue)
+**/
 function formatComponentName (vm) {
   if (vm.$root === vm) {
     return 'root instance'
@@ -48,6 +57,4 @@ function vuePlugin (cb, Vue) {
     cb(error, metaData)
   }
 }
-vuePlugin.error = jstracker.error
-
 export default vuePlugin

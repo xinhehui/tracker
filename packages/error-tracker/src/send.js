@@ -123,7 +123,19 @@ var DEFAULT_DATA = {
     (detector.browser.compatible ? '|c' : ''),
   v: version
 }
+function post (url, params, cb) {
+  var http = new window.XMLHttpRequest()
+  http.open('POST', url, true)
+  //Send the proper header information along with the request
+  http.setRequestHeader('Content-type', 'application/x-www-form-urlencoded')
 
+  http.onreadystatechange = function () { //Call a function when the state changes.
+    if (http.readyState == 4 && http.status == 200) {
+      cb(http.responseText)
+    }
+  }
+  http.send(params)
+}
 // 创建 HTTP GET 请求发送数据。
 // @param {String} url, 日志服务器 URL 地址。
 // @param {Object} data, 附加的监控数据。
@@ -139,14 +151,18 @@ function send (host, data, callback) {
   if (url.length > URLLength) { return callback() }
 
   // @see http://www.javascriptkit.com/jsref/image.shtml
-  var img = new window.Image(1, 1)
-  img.onload = img.onerror = img.onabort = function () {
-    callback()
-    img.onload = img.onerror = img.onabort = null
-    img = null
-  }
+  // 暂时先用post
+  // var img = new window.Image(1, 1)
+  // img.onload = img.onerror = img.onabort = function () {
+  //   callback()
+  //   img.onload = img.onerror = img.onabort = null
+  //   img = null
+  // }
 
-  img.src = url
+  // img.src = url
+  post(url, d, function () {
+    callback()
+  })
 }
 
 var sending = false

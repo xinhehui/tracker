@@ -4,7 +4,7 @@ import {
   debounce,
   merge
 } from './util'
-
+import vueHandle from './vueErrorHandler'
 setting({ handleTryCatchError: handleTryCatchError })
 
 // 忽略错误监听
@@ -159,7 +159,7 @@ function pushError (errorLog) {
 function needReport (sampling) {
   return Math.random() < (sampling || 1)
 }
-export default class errorHandle {
+class Handle {
   constructor (opts) {
     __config(opts)
     this.init()
@@ -176,4 +176,9 @@ export default class errorHandle {
   static log (...rest) {
     M.log(...rest)
   }
+  static error (error) {
+    handleError(formatTryCatchError(error))
+  }
 }
+
+export {vueHandle, Handle}
