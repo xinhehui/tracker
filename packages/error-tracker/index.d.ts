@@ -1,15 +1,14 @@
-type platforms = 'ios' | 'android' | 'web'
-
 export default interface config {
   url: String,
-  site: String,
-  platform: [k in keyof platforms],    //平台名称
-  brand: String,
-  deviceId: String,
-  app_version: String,
+  name: String,
+  concat: Boolean,
+  delay: Number,
+  maxError: Number,
+  sampling: Number
 }
 
-export interface ErrorTracker {
-  config: config
+export interface ErrorTracker <T>{
+  config (config: config): Function,
+  use(plugin: Function, arc: T):
 }
 
