@@ -53,5 +53,8 @@
     "uglify-js": "^3.3.23",
     "vuepress": "^0.10.0",
     "vuepress-theme-xhh": "^1.0.0"
+  },
+  "dependencies": {
+    "detector": "^2.5.0"
   }
 }

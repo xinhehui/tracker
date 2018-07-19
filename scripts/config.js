@@ -2,7 +2,7 @@
  * Created by xuxin on 2018/5/2.
  */
 const path = require('path')
-const babel = require('rollup-plugin-babel');
+const babel = require('rollup-plugin-babel')
 const cjs = require('rollup-plugin-commonjs')
 const replace = require('rollup-plugin-replace')
 const node = require('rollup-plugin-node-resolve')
@@ -23,7 +23,7 @@ const builds = {
     dest: resolve('dist/index.dev.js'),
     format: 'umd',
     env: 'development',
-    plugins: [node(), cjs()],
+    plugins: [node({browser: true}), cjs()],
     banner
   },
   'umd': {
@@ -32,7 +32,7 @@ const builds = {
     format: 'umd',
     env: 'production',
     sourceMap: 'inline',
-    plugins: [node(), cjs()],
+    plugins: [node({browser: true}), cjs()],
     banner
   },
   'umd-prod': {
@@ -41,7 +41,7 @@ const builds = {
     format: 'umd',
     env: 'production',
     sourceMap: 'inline',
-    plugins: [node(), cjs()],
+    plugins: [node({browser: true}), cjs()],
     banner
   }
 }
@@ -63,7 +63,7 @@ function genConfig (name) {
       file: opts.dest,
       format: opts.format,
       banner: opts.banner,
-      name: opts.moduleName || 'JsBridge'
+      name: opts.moduleName || 'ErrorTracker'
     }
   }
 
@@ -87,4 +87,3 @@ if (process.env.TARGET) {
   exports.getBuild = genConfig
   exports.getAllBuilds = () => Object.keys(builds).map(genConfig)
 }
-
