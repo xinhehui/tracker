@@ -39,13 +39,60 @@ const LOAD_ERROR_TYPE = {
   VIDEO: ERROR_VIDEO
 }
 const debug = process.env.NODE_ENV === 'development'
+class Handle {
+  constructor (opts) {
+    __config(opts)
+    this.init()
+  }
+  init () {
+    __init()
+  }
+  /*
+    对一些需要用try catch包装的地方可以使用这个简单的函数
+  */
+  wrapErrors (func) {
+    return tryJS.wrap(func)()
+  }
+  static log (...rest) {
+    M.log(...rest)
+  }
+  static logConcat (...rest) {
+    M.logConcat(...rest)
+  }
+  static error (error) {
+    handleError(formatTryCatchError(error))
+  }
+  static config (opts) {
+    if (!Handle.instance) {
+      Handle.instance = new Handle(opts)
+    }
+    return Handle.instance
+  }
+  useVue (Vue) {
+    vueHandle((error) => {
+      Handle.error(error)
+    }, Vue)
+  }
+}
 function __config (opts) {
   merge(opts, config)
-  if (!opts.server) throw new Error('不存在server参数')
-  M.server = opts.server
+  if (!opts.url) throw new Error('不存在url参数')
+  M.server = opts.url
 
   if (debug) {
     config.report = function (error) { console.warn(error) }
+  } else if (config.concat && config.delay) {
+    config.report = function (error) {
+      const errMsg = error.map(function (item) {
+        return Object.assign(item, {profile: 'log', type: item.type})
+      })
+      Handle.logConcat(errMsg)
+    }
+  } else {
+    config.report = function (error) {
+      error = error[0]
+      Handle.log(Object.assign(error, {profile: 'log', type: error.type}))
+    }
   }
   report = debounce(config.report, config.delay, function () {
     errorList = []
@@ -59,7 +106,6 @@ function __init () {
       window.ignoreError = false
       return
     }
-
     handleError(formatRuntimerError.apply(null, arguments))
   }
 
@@ -159,26 +205,5 @@ function pushError (errorLog) {
 function needReport (sampling) {
   return Math.random() < (sampling || 1)
 }
-class Handle {
-  constructor (opts) {
-    __config(opts)
-    this.init()
-  }
-  init () {
-    __init()
-  }
-  /*
-    对一些需要用try catch包装的地方可以使用这个简单的函数
-  */
-  wrapErrors (func) {
-    return tryJS.wrapArgs(func)
-  }
-  static log (...rest) {
-    M.log(...rest)
-  }
-  static error (error) {
-    handleError(formatTryCatchError(error))
-  }
-}
 
-export {vueHandle, Handle}
+export default Handle

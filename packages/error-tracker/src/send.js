@@ -152,22 +152,23 @@ function send (host, data, callback) {
 
   // @see http://www.javascriptkit.com/jsref/image.shtml
   // 暂时先用post
-  // var img = new window.Image(1, 1)
-  // img.onload = img.onerror = img.onabort = function () {
-  //   callback()
-  //   img.onload = img.onerror = img.onabort = null
-  //   img = null
-  // }
-
-  // img.src = url
-  post(url, d, function () {
+  var img = new window.Image(1, 1)
+  img.onload = img.onerror = img.onabort = function () {
     callback()
-  })
+    img.onload = img.onerror = img.onabort = null
+    img = null
+  }
+
+  img.src = url
+  // post(url, d, function () {
+  //   callback()
+  // })
 }
 
 var sending = false
 /**
  * 分时发送队列中的数据，避免 IE(6) 的连接请求数限制。
+ * 这是里逐条发送
  */
 function timedSend () {
   if (sending) { return }
@@ -195,6 +196,10 @@ function timedSend () {
 var _push = M._DATAS.push
 M.log = function () {
   _push.apply(M._DATAS, arguments)
+  timedSend()
+}
+M.logConcat = function (logs) {
+  M._DATAS = M._DATAS.concat(logs)
   timedSend()
 }
 

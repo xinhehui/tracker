@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title></title>
+	<style type="text/css">
+	</style>
+<script type="text/javascript" src="../../dist/index.js"></script>
+<script>
+  /*** concat 为true是delay才有用，这时候就是合并发送了****/
+var errorTracker = ErrorTracker.config({
+  concat: false,
+  url: 'http://localhost:10086/demo/demo/vertical.jpg'
+})
+
+</script>
+</head>
+<body>
+  vue demo
+  <div id="app"></div>
+  <img src="sasa.png"/>
+<script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.js"></script>
+<script>
+  errorTracker.useVue(Vue)
+new Vue({
+  template: '<div>{{ hi }}</div>',
+  el:"#app",
+  mounted: function () {
+    var a = new Array(-1);
+  },
+  data:function () {
+    return {
+      hi: "111"
+    }
+  }
+})
+
+errorTracker.wrapErrors(() => {ta()})
+</script>
+</body>
+</html>

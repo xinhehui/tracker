@@ -4,10 +4,10 @@
  * Released under the MIT License.
  */
 (function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
-  typeof define === 'function' && define.amd ? define(['exports'], factory) :
-  (factory((global.ErrorTracker = {})));
-}(this, (function (exports) { 'use strict';
+  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
+  typeof define === 'function' && define.amd ? define(factory) :
+  (global.ErrorTracker = factory());
+}(this, (function () { 'use strict';
 
   /**
    * debounce
@@ -901,20 +901,6 @@
     clnt: webDetector.device.name + '/' + webDetector.device.fullVersion + '|' + webDetector.os.name + '/' + webDetector.os.fullVersion + '|' + webDetector.browser.name + '/' + webDetector.browser.fullVersion + '|' + webDetector.engine.name + '/' + webDetector.engine.fullVersion + (webDetector.browser.compatible ? '|c' : ''),
     v: version
   };
-  function post(url, params, cb) {
-    var http = new window.XMLHttpRequest();
-    http.open('POST', url, true);
-    //Send the proper header information along with the request
-    http.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-
-    http.onreadystatechange = function () {
-      //Call a function when the state changes.
-      if (http.readyState == 4 && http.status == 200) {
-        cb(http.responseText);
-      }
-    };
-    http.send(params);
-  }
   // 创建 HTTP GET 请求发送数据。
   // @param {String} url, 日志服务器 URL 地址。
   // @param {Object} data, 附加的监控数据。
@@ -939,22 +925,23 @@
 
     // @see http://www.javascriptkit.com/jsref/image.shtml
     // 暂时先用post
-    // var img = new window.Image(1, 1)
-    // img.onload = img.onerror = img.onabort = function () {
-    //   callback()
-    //   img.onload = img.onerror = img.onabort = null
-    //   img = null
-    // }
-
-    // img.src = url
-    post(url, d, function () {
+    var img = new window.Image(1, 1);
+    img.onload = img.onerror = img.onabort = function () {
       callback();
-    });
+      img.onload = img.onerror = img.onabort = null;
+      img = null;
+    };
+
+    img.src = url;
+    // post(url, d, function () {
+    //   callback()
+    // })
   }
 
   var sending = false;
   /**
    * 分时发送队列中的数据，避免 IE(6) 的连接请求数限制。
+   * 这是里逐条发送
    */
   function timedSend() {
     if (sending) {
@@ -986,6 +973,10 @@
   var _push = M._DATAS.push;
   M.log = function () {
     _push.apply(M._DATAS, arguments);
+    timedSend();
+  };
+  M.logConcat = function (logs) {
+    M._DATAS = M._DATAS.concat(logs);
     timedSend();
   };
 
@@ -1107,14 +1098,83 @@
     VIDEO: ERROR_VIDEO
   };
   var debug = "production" === 'development';
+
+  var Handle = function () {
+    function Handle(opts) {
+      classCallCheck(this, Handle);
+
+      __config(opts);
+      this.init();
+    }
+
+    createClass(Handle, [{
+      key: 'init',
+      value: function init() {
+        __init();
+      }
+      /*
+        对一些需要用try catch包装的地方可以使用这个简单的函数
+      */
+
+    }, {
+      key: 'wrapErrors',
+      value: function wrapErrors(func) {
+        return tryJS.wrap(func)();
+      }
+    }, {
+      key: 'useVue',
+      value: function useVue(Vue) {
+        vuePlugin(function (error) {
+          Handle.error(error);
+        }, Vue);
+      }
+    }], [{
+      key: 'log',
+      value: function log() {
+        M$1.log.apply(M$1, arguments);
+      }
+    }, {
+      key: 'logConcat',
+      value: function logConcat() {
+        M$1.logConcat.apply(M$1, arguments);
+      }
+    }, {
+      key: 'error',
+      value: function error(_error) {
+        handleError(formatTryCatchError(_error));
+      }
+    }, {
+      key: 'config',
+      value: function config(opts) {
+        if (!Handle.instance) {
+          Handle.instance = new Handle(opts);
+        }
+        return Handle.instance;
+      }
+    }]);
+    return Handle;
+  }();
+
   function __config(opts) {
     merge(opts, config$1);
-    if (!opts.server) throw new Error('不存在server参数');
-    M$1.server = opts.server;
+    if (!opts.url) throw new Error('不存在url参数');
+    M$1.server = opts.url;
 
     if (debug) {
       config$1.report = function (error) {
         console.warn(error);
+      };
+    } else if (config$1.concat && config$1.delay) {
+      config$1.report = function (error) {
+        var errMsg = error.map(function (item) {
+          return Object.assign(item, { profile: 'log', type: item.type });
+        });
+        Handle.logConcat(errMsg);
+      };
+    } else {
+      config$1.report = function (error) {
+        error = error[0];
+        Handle.log(Object.assign(error, { profile: 'log', type: error.type }));
       };
     }
     report = debounce(config$1.report, config$1.delay, function () {
@@ -1129,7 +1189,6 @@
         window.ignoreError = false;
         return;
       }
-
       handleError(formatRuntimerError.apply(null, arguments));
     };
 
@@ -1230,45 +1289,6 @@
     return Math.random() < (sampling || 1);
   }
 
-  var Handle = function () {
-    function Handle(opts) {
-      classCallCheck(this, Handle);
-
-      __config(opts);
-      this.init();
-    }
-
-    createClass(Handle, [{
-      key: 'init',
-      value: function init() {
-        __init();
-      }
-      /*
-        对一些需要用try catch包装的地方可以使用这个简单的函数
-      */
-
-    }, {
-      key: 'wrapErrors',
-      value: function wrapErrors(func) {
-        return tryJS.wrapArgs(func);
-      }
-    }], [{
-      key: 'log',
-      value: function log() {
-        M$1.log.apply(M$1, arguments);
-      }
-    }, {
-      key: 'error',
-      value: function error(_error) {
-        handleError(formatTryCatchError(_error));
-      }
-    }]);
-    return Handle;
-  }();
-
-  exports.vueHandle = vuePlugin;
-  exports.Handle = Handle;
-
-  Object.defineProperty(exports, '__esModule', { value: true });
+  return Handle;
 
 })));
