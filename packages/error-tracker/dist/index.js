@@ -127,6 +127,309 @@
     };
   }
 
+  var commonjsGlobal = typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
+
+  function createCommonjsModule(fn, module) {
+  	return module = { exports: {} }, fn(module, module.exports), module.exports;
+  }
+
+  var isImplemented = function () {
+  	var assign = Object.assign, obj;
+  	if (typeof assign !== "function") return false;
+  	obj = { foo: "raz" };
+  	assign(obj, { bar: "dwa" }, { trzy: "trzy" });
+  	return (obj.foo + obj.bar + obj.trzy) === "razdwatrzy";
+  };
+
+  var isImplemented$1 = function () {
+  	try {
+  		return true;
+  	} catch (e) {
+  		return false;
+  	}
+  };
+
+  // eslint-disable-next-line no-empty-function
+  var noop = function () {};
+
+  var _undefined = noop(); // Support ES3 engines
+
+  var isValue = function (val) {
+   return (val !== _undefined) && (val !== null);
+  };
+
+  var keys = Object.keys;
+
+  var shim = function (object) { return keys(isValue(object) ? Object(object) : object); };
+
+  var keys$1 = isImplemented$1() ? Object.keys : shim;
+
+  var validValue = function (value) {
+  	if (!isValue(value)) throw new TypeError("Cannot use null or undefined");
+  	return value;
+  };
+
+  var max   = Math.max;
+
+  var shim$1 = function (dest, src /*, …srcn*/) {
+  	var error, i, length = max(arguments.length, 2), assign;
+  	dest = Object(validValue(dest));
+  	assign = function (key) {
+  		try {
+  			dest[key] = src[key];
+  		} catch (e) {
+  			if (!error) error = e;
+  		}
+  	};
+  	for (i = 1; i < length; ++i) {
+  		src = arguments[i];
+  		keys$1(src).forEach(assign);
+  	}
+  	if (error !== undefined) throw error;
+  	return dest;
+  };
+
+  var assign = isImplemented()
+  	? Object.assign
+  	: shim$1;
+
+  var forEach = Array.prototype.forEach, create = Object.create;
+
+  var process = function (src, obj) {
+  	var key;
+  	for (key in src) obj[key] = src[key];
+  };
+
+  // eslint-disable-next-line no-unused-vars
+  var normalizeOptions = function (opts1 /*, …options*/) {
+  	var result = create(null);
+  	forEach.call(arguments, function (options) {
+  		if (!isValue(options)) return;
+  		process(Object(options), result);
+  	});
+  	return result;
+  };
+
+  // Deprecated
+
+  var isCallable = function (obj) {
+   return typeof obj === "function";
+  };
+
+  var str = "razdwatrzy";
+
+  var isImplemented$2 = function () {
+  	if (typeof str.contains !== "function") return false;
+  	return (str.contains("dwa") === true) && (str.contains("foo") === false);
+  };
+
+  var indexOf = String.prototype.indexOf;
+
+  var shim$2 = function (searchString/*, position*/) {
+  	return indexOf.call(this, searchString, arguments[1]) > -1;
+  };
+
+  var contains = isImplemented$2()
+  	? String.prototype.contains
+  	: shim$2;
+
+  var d_1 = createCommonjsModule(function (module) {
+
+  var d;
+
+  d = module.exports = function (dscr, value/*, options*/) {
+  	var c, e, w, options, desc;
+  	if ((arguments.length < 2) || (typeof dscr !== 'string')) {
+  		options = value;
+  		value = dscr;
+  		dscr = null;
+  	} else {
+  		options = arguments[2];
+  	}
+  	if (dscr == null) {
+  		c = w = true;
+  		e = false;
+  	} else {
+  		c = contains.call(dscr, 'c');
+  		e = contains.call(dscr, 'e');
+  		w = contains.call(dscr, 'w');
+  	}
+
+  	desc = { value: value, configurable: c, enumerable: e, writable: w };
+  	return !options ? desc : assign(normalizeOptions(options), desc);
+  };
+
+  d.gs = function (dscr, get, set/*, options*/) {
+  	var c, e, options, desc;
+  	if (typeof dscr !== 'string') {
+  		options = set;
+  		set = get;
+  		get = dscr;
+  		dscr = null;
+  	} else {
+  		options = arguments[3];
+  	}
+  	if (get == null) {
+  		get = undefined;
+  	} else if (!isCallable(get)) {
+  		options = get;
+  		get = set = undefined;
+  	} else if (set == null) {
+  		set = undefined;
+  	} else if (!isCallable(set)) {
+  		options = set;
+  		set = undefined;
+  	}
+  	if (dscr == null) {
+  		c = true;
+  		e = false;
+  	} else {
+  		c = contains.call(dscr, 'c');
+  		e = contains.call(dscr, 'e');
+  	}
+
+  	desc = { get: get, set: set, configurable: c, enumerable: e };
+  	return !options ? desc : assign(normalizeOptions(options), desc);
+  };
+  });
+
+  var validCallable = function (fn) {
+  	if (typeof fn !== "function") throw new TypeError(fn + " is not a function");
+  	return fn;
+  };
+
+  var eventEmitter = createCommonjsModule(function (module, exports) {
+
+  var apply = Function.prototype.apply, call = Function.prototype.call
+    , create = Object.create, defineProperty = Object.defineProperty
+    , defineProperties = Object.defineProperties
+    , hasOwnProperty = Object.prototype.hasOwnProperty
+    , descriptor = { configurable: true, enumerable: false, writable: true }
+
+    , on, once, off, emit, methods, descriptors, base;
+
+  on = function (type, listener) {
+  	var data;
+
+  	validCallable(listener);
+
+  	if (!hasOwnProperty.call(this, '__ee__')) {
+  		data = descriptor.value = create(null);
+  		defineProperty(this, '__ee__', descriptor);
+  		descriptor.value = null;
+  	} else {
+  		data = this.__ee__;
+  	}
+  	if (!data[type]) data[type] = listener;
+  	else if (typeof data[type] === 'object') data[type].push(listener);
+  	else data[type] = [data[type], listener];
+
+  	return this;
+  };
+
+  once = function (type, listener) {
+  	var once, self;
+
+  	validCallable(listener);
+  	self = this;
+  	on.call(this, type, once = function () {
+  		off.call(self, type, once);
+  		apply.call(listener, this, arguments);
+  	});
+
+  	once.__eeOnceListener__ = listener;
+  	return this;
+  };
+
+  off = function (type, listener) {
+  	var data, listeners, candidate, i;
+
+  	validCallable(listener);
+
+  	if (!hasOwnProperty.call(this, '__ee__')) return this;
+  	data = this.__ee__;
+  	if (!data[type]) return this;
+  	listeners = data[type];
+
+  	if (typeof listeners === 'object') {
+  		for (i = 0; (candidate = listeners[i]); ++i) {
+  			if ((candidate === listener) ||
+  					(candidate.__eeOnceListener__ === listener)) {
+  				if (listeners.length === 2) data[type] = listeners[i ? 0 : 1];
+  				else listeners.splice(i, 1);
+  			}
+  		}
+  	} else {
+  		if ((listeners === listener) ||
+  				(listeners.__eeOnceListener__ === listener)) {
+  			delete data[type];
+  		}
+  	}
+
+  	return this;
+  };
+
+  emit = function (type) {
+  	var i, l, listener, listeners, args;
+
+  	if (!hasOwnProperty.call(this, '__ee__')) return;
+  	listeners = this.__ee__[type];
+  	if (!listeners) return;
+
+  	if (typeof listeners === 'object') {
+  		l = arguments.length;
+  		args = new Array(l - 1);
+  		for (i = 1; i < l; ++i) args[i - 1] = arguments[i];
+
+  		listeners = listeners.slice();
+  		for (i = 0; (listener = listeners[i]); ++i) {
+  			apply.call(listener, this, args);
+  		}
+  	} else {
+  		switch (arguments.length) {
+  		case 1:
+  			call.call(listeners, this);
+  			break;
+  		case 2:
+  			call.call(listeners, this, arguments[1]);
+  			break;
+  		case 3:
+  			call.call(listeners, this, arguments[1], arguments[2]);
+  			break;
+  		default:
+  			l = arguments.length;
+  			args = new Array(l - 1);
+  			for (i = 1; i < l; ++i) {
+  				args[i - 1] = arguments[i];
+  			}
+  			apply.call(listeners, this, args);
+  		}
+  	}
+  };
+
+  methods = {
+  	on: on,
+  	once: once,
+  	off: off,
+  	emit: emit
+  };
+
+  descriptors = {
+  	on: d_1(on),
+  	once: d_1(once),
+  	off: d_1(off),
+  	emit: d_1(emit)
+  };
+
+  base = defineProperties({}, descriptors);
+
+  module.exports = exports = function (o) {
+  	return (o == null) ? create(base) : defineProperties(Object(o), descriptors);
+  };
+  exports.methods = methods;
+  });
+  var eventEmitter_1 = eventEmitter.methods;
+
   var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
   function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -346,8 +649,6 @@
   }();
 
   var detector = Detector;
-
-  var commonjsGlobal = typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
   var win = typeof window === "undefined" ? commonjsGlobal : window;
   var external = win.external;
@@ -1098,6 +1399,7 @@
     VIDEO: ERROR_VIDEO
   };
   var debug = "production" === 'development';
+  var event = eventEmitter();
 
   var Handle = function () {
     function Handle(opts) {
@@ -1111,6 +1413,16 @@
       key: 'init',
       value: function init() {
         __init();
+      }
+    }, {
+      key: 'on',
+      value: function on() {
+        event.on.apply(event, arguments);
+      }
+    }, {
+      key: 'off',
+      value: function off() {
+        event.off.apply(event, arguments);
       }
       /*
         对一些需要用try catch包装的地方可以使用这个简单的函数
@@ -1131,12 +1443,22 @@
     }], [{
       key: 'log',
       value: function log() {
-        M$1.log.apply(M$1, arguments);
+        for (var _len = arguments.length, rest = Array(_len), _key = 0; _key < _len; _key++) {
+          rest[_key] = arguments[_key];
+        }
+
+        event.emit('jserror', rest);
+        M$1.log.apply(M$1, rest);
       }
     }, {
       key: 'logConcat',
       value: function logConcat() {
-        M$1.logConcat.apply(M$1, arguments);
+        for (var _len2 = arguments.length, rest = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+          rest[_key2] = arguments[_key2];
+        }
+
+        event.emit('jserror', rest);
+        M$1.logConcat.apply(M$1, rest);
       }
     }, {
       key: 'error',

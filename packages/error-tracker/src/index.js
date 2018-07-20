@@ -1,4 +1,5 @@
 import tryJS, { setting } from './try'
+import EventEmitter from 'event-emitter'
 import M from './send'
 import {
   debounce,
@@ -39,13 +40,24 @@ const LOAD_ERROR_TYPE = {
   VIDEO: ERROR_VIDEO
 }
 const debug = process.env.NODE_ENV === 'development'
+
 class Handle {
   constructor (opts) {
     __config(opts)
     this.init()
+    this.event = EventEmitter()
   }
   init () {
     __init()
+  }
+  on (...rest) {
+    this.event.on(...rest)
+  }
+  once (...rest) {
+    this.event.once(...rest)
+  }
+  off (...rest) {
+    this.event.off(...rest)
   }
   /*
     对一些需要用try catch包装的地方可以使用这个简单的函数
@@ -54,9 +66,11 @@ class Handle {
     return tryJS.wrap(func)()
   }
   static log (...rest) {
+    Handle.instance.event.emit('jserror', rest)
     M.log(...rest)
   }
   static logConcat (...rest) {
+    Handle.instance.event.emit('jserror', rest)
     M.logConcat(...rest)
   }
   static error (error) {
