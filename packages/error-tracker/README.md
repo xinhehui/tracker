@@ -119,9 +119,9 @@ jstracker 暴露出一个 `tryJS` 对象，可以处理 try..catch 包裹等
 #### 将函数使用 try..catch 包装
 
 ```javascript
-import jstracker from 'jstracker';
+import ErrorTracker from 'error-tracker';
 
-this.handleSelect = jstracker.tryJS.wrap(this.handleSelect);
+this.handleSelect = ErrorTracker.tryJS.wrap(this.handleSelect);
 ```
 
 #### 只包装参数
@@ -132,7 +132,7 @@ function test(type, callback) {
   callback()
 }
 
-(jstracker.tryJS.wrapArgs(test))(4, function() {
+(ErrorTracker.tryJS.wrapArgs(test))(4, function() {
   a = b
 })
 ```
