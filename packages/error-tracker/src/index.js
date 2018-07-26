@@ -5,7 +5,7 @@ import {
   debounce,
   merge
 } from './util'
-import vueHandle from './vueErrorHandler'
+
 setting({ handleTryCatchError: handleTryCatchError })
 
 // 忽略错误监听
@@ -40,72 +40,25 @@ const LOAD_ERROR_TYPE = {
   VIDEO: ERROR_VIDEO
 }
 const debug = process.env.NODE_ENV === 'development'
+const event = EventEmitter()
 
-class Handle {
-  constructor (opts) {
-    __config(opts)
-    this.init()
-    this.event = EventEmitter()
-  }
-  init () {
-    __init()
-  }
-  on (...rest) {
-    this.event.on(...rest)
-  }
-  once (...rest) {
-    this.event.once(...rest)
-  }
-  off (...rest) {
-    this.event.off(...rest)
-  }
-  /*
-    对一些需要用try catch包装的地方可以使用这个简单的函数
-  */
-  wrapErrors (func) {
-    return tryJS.wrap(func)()
-  }
-  static log (...rest) {
-    Handle.instance.event.emit('jserror', rest)
-    M.log(...rest)
-  }
-  static logConcat (...rest) {
-    Handle.instance.event.emit('jserror', rest)
-    M.logConcat(...rest)
-  }
-  static error (error) {
-    handleError(formatTryCatchError(error))
-  }
-  static config (opts) {
-    if (!Handle.instance) {
-      Handle.instance = new Handle(opts)
-    }
-    return Handle.instance
-  }
-  useVue (Vue) {
-    vueHandle((error) => {
-      Handle.error(error)
-    }, Vue)
-  }
-}
 function __config (opts) {
   merge(opts, config)
   if (!opts.url) throw new Error('不存在url参数')
   M.server = opts.url
-
   if (debug) {
     config.report = function (error) { console.warn(error) }
-  } else if (config.concat && config.delay) {
-    config.report = function (error) {
-      const errMsg = error.map(function (item) {
-        return Object.assign(item, {profile: 'log', type: item.type})
-      })
-      Handle.logConcat(errMsg)
-    }
   } else {
     config.report = function (error) {
       error = error[0]
-      Handle.log(Object.assign(error, {profile: 'log', type: error.type}))
+      event.emit('jserror', error)
+      M.log({
+        profile: 'log',
+        type: error.type,
+        channel: 'frontend',
+        message: error.desc,
+        data: error
+      })
     }
   }
   report = debounce(config.report, config.delay, function () {
@@ -219,5 +172,11 @@ function pushError (errorLog) {
 function needReport (sampling) {
   return Math.random() < (sampling || 1)
 }
-
-export default Handle
+export {
+  __config,
+  __init,
+  event,
+  tryJS,
+  handleError,
+  formatTryCatchError
+}

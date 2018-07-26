@@ -19,7 +19,7 @@ const resolve = p => path.resolve(__dirname, '../', p)
 
 const builds = {
   'umd-dev': {
-    entry: resolve('src/index.js'),
+    entry: resolve('src/instance.js'),
     dest: resolve('dist/index.dev.js'),
     format: 'umd',
     env: 'development',
@@ -27,7 +27,7 @@ const builds = {
     banner
   },
   'umd': {
-    entry: resolve('src/index.js'),
+    entry: resolve('src/instance.js'),
     dest: resolve('dist/index.js'),
     format: 'umd',
     env: 'production',
@@ -36,7 +36,7 @@ const builds = {
     banner
   },
   'umd-prod': {
-    entry: resolve('src/index.js'),
+    entry: resolve('src/instance.js'),
     dest: resolve('dist/index.min.js'),
     format: 'umd',
     env: 'production',

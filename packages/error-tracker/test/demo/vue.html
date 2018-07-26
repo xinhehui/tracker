@@ -10,7 +10,7 @@
   /*** concat 为true是delay才有用，这时候就是合并发送了****/
 var errorTracker = ErrorTracker.config({
   concat: false,
-  url: 'http://localhost:10086/demo/demo/vertical.jpg'
+  url: 'http://stats-test.xinhehui.com/common/record'
 })
 errorTracker.on("jserror", function (jserror) {
   console.log(jserror)
@@ -29,6 +29,7 @@ new Vue({
   el:"#app",
   mounted: function () {
     var a = new Array(-1);
+    eval("123()")
   },
   data:function () {
     return {
@@ -37,7 +38,6 @@ new Vue({
   }
 })
 
-errorTracker.wrapErrors(() => {ta()})
 </script>
 </body>
 </html>

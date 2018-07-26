@@ -300,131 +300,131 @@
 
   var eventEmitter = createCommonjsModule(function (module, exports) {
 
-  var apply = Function.prototype.apply, call = Function.prototype.call
-    , create = Object.create, defineProperty = Object.defineProperty
-    , defineProperties = Object.defineProperties
-    , hasOwnProperty = Object.prototype.hasOwnProperty
-    , descriptor = { configurable: true, enumerable: false, writable: true }
+  var apply = Function.prototype.apply, call = Function.prototype.call,
+    create = Object.create, defineProperty = Object.defineProperty,
+    defineProperties = Object.defineProperties,
+    hasOwnProperty = Object.prototype.hasOwnProperty,
+    descriptor = { configurable: true, enumerable: false, writable: true },
 
-    , on, once, off, emit, methods, descriptors, base;
+    on, once, off, emit, methods, descriptors, base;
 
   on = function (type, listener) {
-  	var data;
+    var data;
 
-  	validCallable(listener);
+    validCallable(listener);
 
-  	if (!hasOwnProperty.call(this, '__ee__')) {
-  		data = descriptor.value = create(null);
-  		defineProperty(this, '__ee__', descriptor);
-  		descriptor.value = null;
-  	} else {
-  		data = this.__ee__;
-  	}
-  	if (!data[type]) data[type] = listener;
-  	else if (typeof data[type] === 'object') data[type].push(listener);
-  	else data[type] = [data[type], listener];
+    if (!hasOwnProperty.call(this, '__ee__')) {
+      data = descriptor.value = create(null);
+      defineProperty(this, '__ee__', descriptor);
+      descriptor.value = null;
+    } else {
+      data = this.__ee__;
+    }
+    if (!data[type]) data[type] = listener;
+    else if (typeof data[type] === 'object') data[type].push(listener);
+    else data[type] = [data[type], listener];
 
-  	return this;
+    return this
   };
 
   once = function (type, listener) {
-  	var once, self;
+    var once, self;
 
-  	validCallable(listener);
-  	self = this;
-  	on.call(this, type, once = function () {
-  		off.call(self, type, once);
-  		apply.call(listener, this, arguments);
-  	});
+    validCallable(listener);
+    self = this;
+    on.call(this, type, once = function () {
+      off.call(self, type, once);
+      apply.call(listener, this, arguments);
+    });
 
-  	once.__eeOnceListener__ = listener;
-  	return this;
+    once.__eeOnceListener__ = listener;
+    return this
   };
 
   off = function (type, listener) {
-  	var data, listeners, candidate, i;
+    var data, listeners, candidate, i;
 
-  	validCallable(listener);
+    validCallable(listener);
 
-  	if (!hasOwnProperty.call(this, '__ee__')) return this;
-  	data = this.__ee__;
-  	if (!data[type]) return this;
-  	listeners = data[type];
+    if (!hasOwnProperty.call(this, '__ee__')) return this
+    data = this.__ee__;
+    if (!data[type]) return this
+    listeners = data[type];
 
-  	if (typeof listeners === 'object') {
-  		for (i = 0; (candidate = listeners[i]); ++i) {
-  			if ((candidate === listener) ||
+    if (typeof listeners === 'object') {
+      for (i = 0; (candidate = listeners[i]); ++i) {
+        if ((candidate === listener) ||
   					(candidate.__eeOnceListener__ === listener)) {
-  				if (listeners.length === 2) data[type] = listeners[i ? 0 : 1];
-  				else listeners.splice(i, 1);
-  			}
-  		}
-  	} else {
-  		if ((listeners === listener) ||
+          if (listeners.length === 2) data[type] = listeners[i ? 0 : 1];
+          else listeners.splice(i, 1);
+        }
+      }
+    } else {
+      if ((listeners === listener) ||
   				(listeners.__eeOnceListener__ === listener)) {
-  			delete data[type];
-  		}
-  	}
+        delete data[type];
+      }
+    }
 
-  	return this;
+    return this
   };
 
   emit = function (type) {
-  	var i, l, listener, listeners, args;
+    var i, l, listener, listeners, args;
 
-  	if (!hasOwnProperty.call(this, '__ee__')) return;
-  	listeners = this.__ee__[type];
-  	if (!listeners) return;
+    if (!hasOwnProperty.call(this, '__ee__')) return
+    listeners = this.__ee__[type];
+    if (!listeners) return
 
-  	if (typeof listeners === 'object') {
-  		l = arguments.length;
-  		args = new Array(l - 1);
-  		for (i = 1; i < l; ++i) args[i - 1] = arguments[i];
+    if (typeof listeners === 'object') {
+      l = arguments.length;
+      args = new Array(l - 1);
+      for (i = 1; i < l; ++i) args[i - 1] = arguments[i];
 
-  		listeners = listeners.slice();
-  		for (i = 0; (listener = listeners[i]); ++i) {
-  			apply.call(listener, this, args);
-  		}
-  	} else {
-  		switch (arguments.length) {
-  		case 1:
-  			call.call(listeners, this);
-  			break;
-  		case 2:
-  			call.call(listeners, this, arguments[1]);
-  			break;
-  		case 3:
-  			call.call(listeners, this, arguments[1], arguments[2]);
-  			break;
-  		default:
-  			l = arguments.length;
-  			args = new Array(l - 1);
-  			for (i = 1; i < l; ++i) {
-  				args[i - 1] = arguments[i];
-  			}
-  			apply.call(listeners, this, args);
-  		}
-  	}
+      listeners = listeners.slice();
+      for (i = 0; (listener = listeners[i]); ++i) {
+        apply.call(listener, this, args);
+      }
+    } else {
+      switch (arguments.length) {
+        case 1:
+          call.call(listeners, this);
+          break
+        case 2:
+          call.call(listeners, this, arguments[1]);
+          break
+        case 3:
+          call.call(listeners, this, arguments[1], arguments[2]);
+          break
+        default:
+          l = arguments.length;
+          args = new Array(l - 1);
+          for (i = 1; i < l; ++i) {
+            args[i - 1] = arguments[i];
+          }
+          apply.call(listeners, this, args);
+      }
+    }
   };
 
   methods = {
-  	on: on,
-  	once: once,
-  	off: off,
-  	emit: emit
+    on: on,
+    once: once,
+    off: off,
+    emit: emit
   };
 
   descriptors = {
-  	on: d_1(on),
-  	once: d_1(once),
-  	off: d_1(off),
-  	emit: d_1(emit)
+    on: d_1(on),
+    once: d_1(once),
+    off: d_1(off),
+    emit: d_1(emit)
   };
 
   base = defineProperties({}, descriptors);
 
   module.exports = exports = function (o) {
-  	return (o == null) ? create(base) : defineProperties(Object(o), descriptors);
+    return (o == null) ? create(base) : defineProperties(Object(o), descriptors)
   };
   exports.methods = methods;
   });
@@ -1179,6 +1179,10 @@
         for (var i = 0, l = obj[k].length; i < l; i++) {
           p.push(k + '=' + encodeURIComponent(escapeString(obj[k][i])));
         }
+      } else if (typeOf$1(obj[k]) === '[object Object]') {
+        Object.keys(obj[k]).forEach(function (item) {
+          p.push('data[' + item + ']=' + encodeURIComponent(escapeString(obj[k][item])));
+        });
       } else {
         p.push(k + '=' + encodeURIComponent(escapeString(obj[k])));
       }
@@ -1201,12 +1205,12 @@
     ref: path(doc.referrer) || '-',
     clnt: webDetector.device.name + '/' + webDetector.device.fullVersion + '|' + webDetector.os.name + '/' + webDetector.os.fullVersion + '|' + webDetector.browser.name + '/' + webDetector.browser.fullVersion + '|' + webDetector.engine.name + '/' + webDetector.engine.fullVersion + (webDetector.browser.compatible ? '|c' : ''),
     v: version
-  };
-  // 创建 HTTP GET 请求发送数据。
-  // @param {String} url, 日志服务器 URL 地址。
-  // @param {Object} data, 附加的监控数据。
-  // @param {Function} callback
-  function send(host, data, callback) {
+
+    // 创建 HTTP GET 请求发送数据。
+    // @param {String} url, 日志服务器 URL 地址。
+    // @param {Object} data, 附加的监控数据。
+    // @param {Function} callback
+  };function send(host, data, callback) {
     if (!callback) {
       callback = function callback() {};
     }
@@ -1232,17 +1236,15 @@
       img.onload = img.onerror = img.onabort = null;
       img = null;
     };
-
+    img.crossOrigin = 'Anonymous';
     img.src = url;
-    // post(url, d, function () {
-    //   callback()
-    // })
   }
 
   var sending = false;
   /**
    * 分时发送队列中的数据，避免 IE(6) 的连接请求数限制。
    * 这是里逐条发送
+   * 这个是通过数组实现一个队列，依次发动
    */
   function timedSend() {
     if (sending) {
@@ -1269,15 +1271,10 @@
       timedSend();
     });
   }
-
-  // timedSend 准备好后可以替换 push 方法，自动分时发送。
   var _push = M._DATAS.push;
+  // timedSend 准备好后可以替换 push 方法，自动分时发送。
   M.log = function () {
     _push.apply(M._DATAS, arguments);
-    timedSend();
-  };
-  M.logConcat = function (logs) {
-    M._DATAS = M._DATAS.concat(logs);
     timedSend();
   };
 
@@ -1285,86 +1282,6 @@
   timedSend();
 
   var M$1 = M;
-
-  /**
-   *
-   * vue里的插件
-   * 用法如下
-   * 在html中引入
-   * <script type="text/javascript" src="http://npmprivate.xinhehui.com/error-tracker/packages/error-tracker/dist/index.js"></script>
-  <script>
-  var errorTracker = new ErrorTracker.Handle({
-    concat: false,
-    server: 'http://localhost:10086/demo/demo/vertical.jpg',
-    report: function (errorLogs) {
-      var error = errorLogs[0]
-      let mapJS = undefined
-      if (error.stack != 'no stack') {
-        const stack = error.stack.split(/[\n]/)
-        mapJS = stack[1].match(/\((.*)js/)
-        if (mapJS) mapJS = mapJS[1] + 'js.map'
-      }
-      ErrorTracker.Handle.log(Object.assign(error, {profile: 'log', mapjs: mapJS, type: error.type}))
-    }
-  })
-  在main.js中传入Vue对象
-   * window.ErrorTracker.vueHandle((error) => {
-    window.ErrorTracker.Handle.error(error)
-  }, Vue)
-  **/
-  function formatComponentName(vm) {
-    if (vm.$root === vm) {
-      return 'root instance';
-    }
-    var name = vm._isVue ? vm.$options.name || vm.$options._componentTag : vm.name;
-    return (name ? 'component <' + name + '>' : 'anonymous component') + (vm._isVue && vm.$options.__file ? ' at ' + vm.$options.__file : '');
-  }
-
-  function vuePlugin(cb, Vue) {
-    Vue = Vue || window.Vue;
-
-    // quit if Vue isn't on the page
-    if (!Vue || !Vue.config) return;
-
-    Vue.config.errorHandler = function VueErrorHandler(error, vm, info) {
-      var metaData = {};
-
-      // vm and lifecycleHook are not always available
-      if (Object.prototype.toString.call(vm) === '[object Object]') {
-        metaData.componentName = formatComponentName(vm);
-        metaData.propsData = vm.$options.propsData;
-      }
-
-      if (typeof info !== 'undefined') {
-        metaData.lifecycleHook = info;
-      }
-      cb(error, metaData);
-    };
-  }
-
-  var classCallCheck = function (instance, Constructor) {
-    if (!(instance instanceof Constructor)) {
-      throw new TypeError("Cannot call a class as a function");
-    }
-  };
-
-  var createClass = function () {
-    function defineProperties(target, props) {
-      for (var i = 0; i < props.length; i++) {
-        var descriptor = props[i];
-        descriptor.enumerable = descriptor.enumerable || false;
-        descriptor.configurable = true;
-        if ("value" in descriptor) descriptor.writable = true;
-        Object.defineProperty(target, descriptor.key, descriptor);
-      }
-    }
-
-    return function (Constructor, protoProps, staticProps) {
-      if (protoProps) defineProperties(Constructor.prototype, protoProps);
-      if (staticProps) defineProperties(Constructor, staticProps);
-      return Constructor;
-    };
-  }();
 
   setting({ handleTryCatchError: handleTryCatchError });
 
@@ -1401,102 +1318,25 @@
   var debug = "production" === 'development';
   var event = eventEmitter();
 
-  var Handle = function () {
-    function Handle(opts) {
-      classCallCheck(this, Handle);
-
-      __config(opts);
-      this.init();
-    }
-
-    createClass(Handle, [{
-      key: 'init',
-      value: function init() {
-        __init();
-      }
-    }, {
-      key: 'on',
-      value: function on() {
-        event.on.apply(event, arguments);
-      }
-    }, {
-      key: 'off',
-      value: function off() {
-        event.off.apply(event, arguments);
-      }
-      /*
-        对一些需要用try catch包装的地方可以使用这个简单的函数
-      */
-
-    }, {
-      key: 'wrapErrors',
-      value: function wrapErrors(func) {
-        return tryJS.wrap(func)();
-      }
-    }, {
-      key: 'useVue',
-      value: function useVue(Vue) {
-        vuePlugin(function (error) {
-          Handle.error(error);
-        }, Vue);
-      }
-    }], [{
-      key: 'log',
-      value: function log() {
-        for (var _len = arguments.length, rest = Array(_len), _key = 0; _key < _len; _key++) {
-          rest[_key] = arguments[_key];
-        }
-
-        event.emit('jserror', rest);
-        M$1.log.apply(M$1, rest);
-      }
-    }, {
-      key: 'logConcat',
-      value: function logConcat() {
-        for (var _len2 = arguments.length, rest = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-          rest[_key2] = arguments[_key2];
-        }
-
-        event.emit('jserror', rest);
-        M$1.logConcat.apply(M$1, rest);
-      }
-    }, {
-      key: 'error',
-      value: function error(_error) {
-        handleError(formatTryCatchError(_error));
-      }
-    }, {
-      key: 'config',
-      value: function config(opts) {
-        if (!Handle.instance) {
-          Handle.instance = new Handle(opts);
-        }
-        return Handle.instance;
-      }
-    }]);
-    return Handle;
-  }();
-
   function __config(opts) {
     merge(opts, config$1);
     if (!opts.url) throw new Error('不存在url参数');
     M$1.server = opts.url;
-
     if (debug) {
       config$1.report = function (error) {
         console.warn(error);
       };
-    } else if (config$1.concat && config$1.delay) {
-      config$1.report = function (error) {
-        var errMsg = error.map(function (item) {
-          return Object.assign(item, { profile: 'log', type: item.type });
-        });
-        Handle.logConcat(errMsg);
-      };
     } else {
       config$1.report = function (error) {
         error = error[0];
-        Handle.log(Object.assign(error, { profile: 'log', type: error.type }));
+        event.emit('jserror', error);
+        M$1.log({
+          profile: 'log',
+          type: error.type,
+          channel: 'frontend',
+          message: error.desc,
+          data: error
+        });
       };
     }
     report = debounce(config$1.report, config$1.delay, function () {
@@ -1610,6 +1450,167 @@
   function needReport(sampling) {
     return Math.random() < (sampling || 1);
   }
+
+  /**
+   *
+   * vue里的插件
+   * 用法如下
+   * 在html中引入
+   * <script type="text/javascript" src="http://npmprivate.xinhehui.com/error-tracker/packages/error-tracker/dist/index.js"></script>
+  <script>
+  var errorTracker = new ErrorTracker.Handle({
+    concat: false,
+    server: 'http://localhost:10086/demo/demo/vertical.jpg',
+    report: function (errorLogs) {
+      var error = errorLogs[0]
+      let mapJS = undefined
+      if (error.stack != 'no stack') {
+        const stack = error.stack.split(/[\n]/)
+        mapJS = stack[1].match(/\((.*)js/)
+        if (mapJS) mapJS = mapJS[1] + 'js.map'
+      }
+      ErrorTracker.Handle.log(Object.assign(error, {profile: 'log', mapjs: mapJS, type: error.type}))
+    }
+  })
+  在main.js中传入Vue对象
+   * window.ErrorTracker.vueHandle((error) => {
+    window.ErrorTracker.Handle.error(error)
+  }, Vue)
+  **/
+  function formatComponentName(vm) {
+    if (vm.$root === vm) {
+      return 'root instance';
+    }
+    var name = vm._isVue ? vm.$options.name || vm.$options._componentTag : vm.name;
+    return (name ? 'component <' + name + '>' : 'anonymous component') + (vm._isVue && vm.$options.__file ? ' at ' + vm.$options.__file : '');
+  }
+
+  function vuePlugin(cb, Vue) {
+    Vue = Vue || window.Vue;
+
+    // quit if Vue isn't on the page
+    if (!Vue || !Vue.config) return;
+
+    Vue.config.errorHandler = function VueErrorHandler(error, vm, info) {
+      var metaData = {};
+
+      // vm and lifecycleHook are not always available
+      if (Object.prototype.toString.call(vm) === '[object Object]') {
+        metaData.componentName = formatComponentName(vm);
+        metaData.propsData = vm.$options.propsData;
+      }
+
+      if (typeof info !== 'undefined') {
+        metaData.lifecycleHook = info;
+      }
+      cb(error, metaData);
+    };
+  }
+
+  var classCallCheck = function (instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError("Cannot call a class as a function");
+    }
+  };
+
+  var createClass = function () {
+    function defineProperties(target, props) {
+      for (var i = 0; i < props.length; i++) {
+        var descriptor = props[i];
+        descriptor.enumerable = descriptor.enumerable || false;
+        descriptor.configurable = true;
+        if ("value" in descriptor) descriptor.writable = true;
+        Object.defineProperty(target, descriptor.key, descriptor);
+      }
+    }
+
+    return function (Constructor, protoProps, staticProps) {
+      if (protoProps) defineProperties(Constructor.prototype, protoProps);
+      if (staticProps) defineProperties(Constructor, staticProps);
+      return Constructor;
+    };
+  }();
+
+  var Handle = function () {
+    function Handle(opts) {
+      classCallCheck(this, Handle);
+
+      __config(opts);
+      this.init();
+    }
+
+    createClass(Handle, [{
+      key: 'init',
+      value: function init() {
+        __init();
+      }
+    }, {
+      key: 'on',
+      value: function on() {
+        event.on.apply(event, arguments);
+      }
+    }, {
+      key: 'once',
+      value: function once() {
+        event.once.apply(event, arguments);
+      }
+    }, {
+      key: 'off',
+      value: function off() {
+        event.off.apply(event, arguments);
+      }
+      /*
+        对一些需要用try catch包装的地方可以使用这个简单的函数
+      */
+
+    }, {
+      key: 'wrapErrors',
+      value: function wrapErrors(func) {
+        return tryJS.wrap(func)();
+      }
+    }, {
+      key: 'useVue',
+      value: function useVue(Vue) {
+        vuePlugin(function (error) {
+          Handle.error(error);
+        }, Vue);
+      }
+    }], [{
+      key: 'log',
+      value: function log() {
+        for (var _len = arguments.length, rest = Array(_len), _key = 0; _key < _len; _key++) {
+          rest[_key] = arguments[_key];
+        }
+
+        event.emit('jserror', rest);
+        M$1.log.apply(M$1, rest);
+      }
+    }, {
+      key: 'logConcat',
+      value: function logConcat() {
+        for (var _len2 = arguments.length, rest = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+          rest[_key2] = arguments[_key2];
+        }
+
+        event.emit('jserror', rest);
+        M$1.logConcat.apply(M$1, rest);
+      }
+    }, {
+      key: 'error',
+      value: function error(_error) {
+        handleError(formatTryCatchError(_error));
+      }
+    }, {
+      key: 'config',
+      value: function config(opts) {
+        if (!Handle.instance) {
+          Handle.instance = new Handle(opts);
+        }
+        return Handle.instance;
+      }
+    }]);
+    return Handle;
+  }();
 
   return Handle;
 
