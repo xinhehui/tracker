@@ -1,5 +1,5 @@
 ## 简介
-[https://www.yuque.com/rx36r5/qahuie/df1pgq]
+#### [文档语雀](https://www.yuque.com/rx36r5/qahuie/df1pgq)
 通过对 error 事件的监听，获取异常相关信息并缓存，在一定时间之后报告处理。
 
 ## 功能

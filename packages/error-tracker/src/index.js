@@ -87,6 +87,7 @@ class CaptureErrorAbstract {
   constructor (opts) {
     this.errorList = [] // 错误数据的收集数组
     this.config = {
+      debug: 0, //默认是直接输出
       concat: false, // 默认不合并 单条发送
       delay: 2000, // 错误处理间隔时间
       maxError: 16, // 异常报错数量限制
@@ -107,8 +108,8 @@ class CaptureError extends CaptureErrorAbstract {
     M.server = opts.url
 
     let report = null
-    if (debug) {
-      report = function (error) { console.warn(error) }
+    if (this.config.debug) {
+      report = function (error) { error = error[0]; console.warn(error) }
     } else {
       report = function (error) {
         error = error[0]

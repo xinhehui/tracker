@@ -1350,7 +1350,6 @@
     AUDIO: ERROR_AUDIO,
     VIDEO: ERROR_VIDEO
   };
-  var debug = "production" === 'development';
   var event = eventEmitter();
 
   /**
@@ -1415,6 +1414,7 @@
 
       this.errorList = []; // 错误数据的收集数组
       this.config = {
+        debug: 0, //默认是直接输出
         concat: false, // 默认不合并 单条发送
         delay: 2000, // 错误处理间隔时间
         maxError: 16, // 异常报错数量限制
@@ -1446,9 +1446,9 @@
       M$1.server = opts.url;
 
       var report = null;
-      if (debug) {
+      if (_this.config.debug) {
         report = function report(error) {
-          console.warn(error);
+          error = error[0];console.warn(error);
         };
       } else {
         report = function report(error) {
