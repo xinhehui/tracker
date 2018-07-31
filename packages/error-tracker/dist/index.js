@@ -1416,7 +1416,7 @@
       this.config = {
         debug: 0, //默认是直接输出
         concat: false, // 默认不合并 单条发送
-        delay: 2000, // 错误处理间隔时间
+        delay: 0, // 错误处理间隔时间
         maxError: 16, // 异常报错数量限制
         sampling: 1 // 采样率
       };
@@ -1646,8 +1646,10 @@
     }, {
       key: 'useVue',
       value: function useVue(Vue) {
+        var _this = this;
+
         vuePlugin(function (error) {
-          Handle.error(error);
+          _this.error(error);
         }, Vue);
       }
     }], [{

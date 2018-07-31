@@ -51,7 +51,7 @@ export default class Handle {
   }
   useVue (Vue) {
     vueHandle((error) => {
-      Handle.error(error)
+      this.error(error)
     }, Vue)
   }
 }
