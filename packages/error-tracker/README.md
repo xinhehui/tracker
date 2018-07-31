@@ -113,23 +113,23 @@ var ERROR_TRY_CATCH = 8
 ```
 
 #### 接口 
-** on 可以监听错误的暴露 **
+**on 可以监听错误的暴露** 
 ```
 window.errorTracker.on("jserror", function (jserror) {
   console.log(jserror)
 })
 ```
 这个接口在使用时应该不会用到，加上去是因为在测试时或者本地情况不会真正发送请求，通过这个接口得到真实传递的数据
-** once 仅可以监听一次 **
-** off 取消错误监听事件 **
-** wrapErrors  对一些需要用try catch包装的地方可以使用这个简单的函数 **
+#### **once 仅可以监听一次**
+#### **off 取消错误监听事件**
+#### **wrapErrors  对一些需要用try catch包装的地方可以使用这个简单的函数**
 【使用方法】
 ```
 window.errorTracker.wrapErrors(function () {
   new Array(-1)
 })
 ```
-** log 通用发送接口 **
+**log 通用发送接口**
 【使用方法】这个例子是说某些情况我们记录一些特定的异常事件来发送到远端
 ```
 if (location.search.indexOf("hmsr") === -1) {
@@ -139,4 +139,4 @@ if (location.search.indexOf("hmsr") === -1) {
   })
 }
 ```
-** error 类似于log，不过这个需要传递的是error对象 **
+**error 类似于log，不过这个需要传递的是error对象**
