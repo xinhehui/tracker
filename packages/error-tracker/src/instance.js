@@ -1,14 +1,11 @@
-import {__config, __init, event, tryJS, handleError, formatTryCatchError} from './index'
+import CaptureError, {formatTryCatchError, event} from './index'
 import vueHandle from './vueErrorHandler'
 import M from './send'
+import tryJS from './try'
 
 export default class Handle {
   constructor (opts) {
-    __config(opts)
-    this.init()
-  }
-  init () {
-    __init()
+    this.CaptureError = new CaptureError(opts)
   }
   on (...rest) {
     event.on(...rest)
@@ -25,16 +22,26 @@ export default class Handle {
   wrapErrors (func) {
     return tryJS.wrap(func)()
   }
-  static log (...rest) {
-    event.emit('jserror', rest)
-    M.log(...rest)
+  log (error) {
+    if (!error) {
+      throw new Error('没有传递error对象')
+    }
+    if (!error.type) {
+      throw new Error('传递的error对象没有type类型')
+    }
+    event.emit('jserror', error)
+    M.log({
+      profile: 'log',
+      type: error.type,
+      channel: 'frontend',
+      message: error.desc,
+      data: error
+    })
   }
-  static logConcat (...rest) {
-    event.emit('jserror', rest)
-    M.logConcat(...rest)
-  }
-  static error (error) {
-    handleError(formatTryCatchError(error))
+  error (error) {
+    if (Object.prototype.toString.call(error) === '[object Error]') {
+      this.CaptureError.handleError(formatTryCatchError(error))
+    }
   }
   static config (opts) {
     if (!Handle.instance) {

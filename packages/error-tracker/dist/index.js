@@ -1283,24 +1283,59 @@
 
   var M$1 = M;
 
-  setting({ handleTryCatchError: handleTryCatchError });
+  var classCallCheck = function (instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+      throw new TypeError("Cannot call a class as a function");
+    }
+  };
+
+  var createClass = function () {
+    function defineProperties(target, props) {
+      for (var i = 0; i < props.length; i++) {
+        var descriptor = props[i];
+        descriptor.enumerable = descriptor.enumerable || false;
+        descriptor.configurable = true;
+        if ("value" in descriptor) descriptor.writable = true;
+        Object.defineProperty(target, descriptor.key, descriptor);
+      }
+    }
+
+    return function (Constructor, protoProps, staticProps) {
+      if (protoProps) defineProperties(Constructor.prototype, protoProps);
+      if (staticProps) defineProperties(Constructor, staticProps);
+      return Constructor;
+    };
+  }();
+
+  var inherits = function (subClass, superClass) {
+    if (typeof superClass !== "function" && superClass !== null) {
+      throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
+    }
+
+    subClass.prototype = Object.create(superClass && superClass.prototype, {
+      constructor: {
+        value: subClass,
+        enumerable: false,
+        writable: true,
+        configurable: true
+      }
+    });
+    if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+  };
+
+  var possibleConstructorReturn = function (self, call) {
+    if (!self) {
+      throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+    }
+
+    return call && (typeof call === "object" || typeof call === "function") ? call : self;
+  };
 
   // 忽略错误监听
   window.ignoreError = false;
-  // 错误日志列表
-  var errorList = [];
-  // 错误处理回调
-  var report = function report() {};
 
-  var config$1 = {
-    concat: true,
-    delay: 2000, // 错误处理间隔时间
-    maxError: 16, // 异常报错数量限制
-    sampling: 1 // 采样率
-
-
-    // 定义的错误类型码
-  };var ERROR_RUNTIME = 1;
+  // 定义的错误类型码
+  var ERROR_RUNTIME = 1;
   var ERROR_SCRIPT = 2;
   var ERROR_STYLE = 3;
   var ERROR_IMAGE = 4;
@@ -1317,57 +1352,6 @@
   };
   var debug = "production" === 'development';
   var event = eventEmitter();
-
-  function __config(opts) {
-    merge(opts, config$1);
-    if (!opts.url) throw new Error('不存在url参数');
-    M$1.server = opts.url;
-    if (debug) {
-      config$1.report = function (error) {
-        console.warn(error);
-      };
-    } else {
-      config$1.report = function (error) {
-        error = error[0];
-        event.emit('jserror', error);
-        M$1.log({
-          profile: 'log',
-          type: error.type,
-          channel: 'frontend',
-          message: error.desc,
-          data: error
-        });
-      };
-    }
-    report = debounce(config$1.report, config$1.delay, function () {
-      errorList = [];
-    });
-  }
-
-  function __init() {
-    // 监听 JavaScript 报错异常(JavaScript runtime error)
-    window.onerror = function () {
-      if (window.ignoreError) {
-        window.ignoreError = false;
-        return;
-      }
-      handleError(formatRuntimerError.apply(null, arguments));
-    };
-
-    // 监听资源加载错误(JavaScript Scource failed to load)
-    window.addEventListener('error', function (event) {
-      // 过滤 target 为 window 的异常，避免与上面的 onerror 重复
-      var errorTarget = event.target;
-      if (errorTarget !== window && errorTarget.nodeName && LOAD_ERROR_TYPE[errorTarget.nodeName.toUpperCase()]) {
-        handleError(formatLoadError(errorTarget));
-      }
-    }, true);
-  }
-
-  // 处理 try..catch 错误
-  function handleTryCatchError(error) {
-    handleError(formatTryCatchError(error));
-  }
 
   /**
    * 生成 runtime 错误日志
@@ -1416,32 +1400,6 @@
   }
 
   /**
-   * 错误数据预处理
-   *
-   * @param  {Object} errorLog    错误日志
-   */
-  function handleError(errorLog) {
-    // 是否延时处理
-    if (!config$1.concat) {
-      !needReport(config$1.sampling) || config$1.report([errorLog]);
-    } else {
-      pushError(errorLog);
-      report(errorList);
-    }
-  }
-
-  /**
-   * 往异常信息数组里面添加一条记录
-   *
-   * @param  {Object} errorLog 错误日志
-   */
-  function pushError(errorLog) {
-    if (needReport(config$1.sampling) && errorList.length < config$1.maxError) {
-      errorList.push(errorLog);
-    }
-  }
-
-  /**
    * 设置一个采样率，决定是否上报
    *
    * @param  {Number} sampling 0 - 1
@@ -1450,6 +1408,128 @@
   function needReport(sampling) {
     return Math.random() < (sampling || 1);
   }
+
+  var CaptureErrorAbstract = function () {
+    function CaptureErrorAbstract(opts) {
+      classCallCheck(this, CaptureErrorAbstract);
+
+      this.errorList = []; // 错误数据的收集数组
+      this.config = {
+        concat: false, // 默认不合并 单条发送
+        delay: 2000, // 错误处理间隔时间
+        maxError: 16, // 异常报错数量限制
+        sampling: 1 // 采样率
+      };
+      Object.assign(this.config, opts);
+    }
+
+    createClass(CaptureErrorAbstract, [{
+      key: 'report',
+      value: function report() {
+        throw new Error('该类必须继承后覆盖使用');
+      }
+    }]);
+    return CaptureErrorAbstract;
+  }();
+
+  var CaptureError = function (_CaptureErrorAbstract) {
+    inherits(CaptureError, _CaptureErrorAbstract);
+
+    function CaptureError(opts) {
+      classCallCheck(this, CaptureError);
+
+      var _this = possibleConstructorReturn(this, (CaptureError.__proto__ || Object.getPrototypeOf(CaptureError)).call(this, opts));
+
+      if (!opts.url) throw new Error('不存在url参数');
+      Object.assign(_this.config, opts);
+
+      M$1.server = opts.url;
+
+      var report = null;
+      if (debug) {
+        report = function report(error) {
+          console.warn(error);
+        };
+      } else {
+        report = function report(error) {
+          error = error[0];
+          event.emit('jserror', error);
+          M$1.log({
+            profile: 'log',
+            type: error.type,
+            channel: 'frontend',
+            message: error.desc,
+            data: error
+          });
+        };
+      }
+      _this.report = debounce(report, _this.config.delay, function () {
+        _this.errorList = [];
+      });
+      _this.init();
+      return _this;
+    }
+
+    createClass(CaptureError, [{
+      key: 'init',
+      value: function init() {
+        var self = this;
+        // 监听 JavaScript 报错异常(JavaScript runtime error)
+        window.onerror = function () {
+          if (window.ignoreError) {
+            window.ignoreError = false;
+            return;
+          }
+          self.handleError(formatRuntimerError.apply(null, arguments));
+        };
+
+        // 监听资源加载错误(JavaScript Scource failed to load)
+        window.addEventListener('error', function (event) {
+          // 过滤 target 为 window 的异常，避免与上面的 onerror 重复
+          var errorTarget = event.target;
+          if (errorTarget !== window && errorTarget.nodeName && LOAD_ERROR_TYPE[errorTarget.nodeName.toUpperCase()]) {
+            self.handleError(formatLoadError(errorTarget));
+          }
+        }, true);
+
+        setting({ handleTryCatchError: function handleTryCatchError(error) {
+            self.handleError(formatTryCatchError(error));
+          } });
+      }
+      /**
+      * 错误数据预处理
+      *
+      * @param  {Object} errorLog    错误日志
+      */
+
+    }, {
+      key: 'handleError',
+      value: function handleError(errorLog) {
+        // 是否延时处理
+        if (!this.config.concat) {
+          !needReport(this.config.sampling) || this.report([errorLog]);
+        } else {
+          this.pushError(errorLog);
+          this.report(this.errorList);
+        }
+      }
+
+      /**
+      * 往异常信息数组里面添加一条记录
+      *
+      * @param  {Object} errorLog 错误日志
+      */
+
+    }, {
+      key: 'pushError',
+      value: function pushError(errorLog) {
+        if (needReport(this.config.sampling) && this.errorList.length < this.config.maxError) {
+          this.errorList.push(errorLog);
+        }
+      }
+    }]);
+    return CaptureError;
+  }(CaptureErrorAbstract);
 
   /**
    *
@@ -1507,44 +1587,14 @@
     };
   }
 
-  var classCallCheck = function (instance, Constructor) {
-    if (!(instance instanceof Constructor)) {
-      throw new TypeError("Cannot call a class as a function");
-    }
-  };
-
-  var createClass = function () {
-    function defineProperties(target, props) {
-      for (var i = 0; i < props.length; i++) {
-        var descriptor = props[i];
-        descriptor.enumerable = descriptor.enumerable || false;
-        descriptor.configurable = true;
-        if ("value" in descriptor) descriptor.writable = true;
-        Object.defineProperty(target, descriptor.key, descriptor);
-      }
-    }
-
-    return function (Constructor, protoProps, staticProps) {
-      if (protoProps) defineProperties(Constructor.prototype, protoProps);
-      if (staticProps) defineProperties(Constructor, staticProps);
-      return Constructor;
-    };
-  }();
-
   var Handle = function () {
     function Handle(opts) {
       classCallCheck(this, Handle);
 
-      __config(opts);
-      this.init();
+      this.CaptureError = new CaptureError(opts);
     }
 
     createClass(Handle, [{
-      key: 'init',
-      value: function init() {
-        __init();
-      }
-    }, {
       key: 'on',
       value: function on() {
         event.on.apply(event, arguments);
@@ -1569,6 +1619,31 @@
         return tryJS.wrap(func)();
       }
     }, {
+      key: 'log',
+      value: function log(error) {
+        if (!error) {
+          throw new Error('没有传递error对象');
+        }
+        if (!error.type) {
+          throw new Error('传递的error对象没有type类型');
+        }
+        event.emit('jserror', error);
+        M$1.log({
+          profile: 'log',
+          type: error.type,
+          channel: 'frontend',
+          message: error.desc,
+          data: error
+        });
+      }
+    }, {
+      key: 'error',
+      value: function error(_error) {
+        if (Object.prototype.toString.call(_error) === '[object Error]') {
+          this.CaptureError.handleError(formatTryCatchError(_error));
+        }
+      }
+    }, {
       key: 'useVue',
       value: function useVue(Vue) {
         vuePlugin(function (error) {
@@ -1576,31 +1651,6 @@
         }, Vue);
       }
     }], [{
-      key: 'log',
-      value: function log() {
-        for (var _len = arguments.length, rest = Array(_len), _key = 0; _key < _len; _key++) {
-          rest[_key] = arguments[_key];
-        }
-
-        event.emit('jserror', rest);
-        M$1.log.apply(M$1, rest);
-      }
-    }, {
-      key: 'logConcat',
-      value: function logConcat() {
-        for (var _len2 = arguments.length, rest = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-          rest[_key2] = arguments[_key2];
-        }
-
-        event.emit('jserror', rest);
-        M$1.logConcat.apply(M$1, rest);
-      }
-    }, {
-      key: 'error',
-      value: function error(_error) {
-        handleError(formatTryCatchError(_error));
-      }
-    }, {
       key: 'config',
       value: function config(opts) {
         if (!Handle.instance) {

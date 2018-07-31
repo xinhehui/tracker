@@ -1,26 +1,12 @@
-import tryJS, { setting } from './try'
+import { setting } from './try'
 import EventEmitter from 'event-emitter'
 import M from './send'
 import {
-  debounce,
-  merge
+  debounce
 } from './util'
-
-setting({ handleTryCatchError: handleTryCatchError })
 
 // 忽略错误监听
 window.ignoreError = false
-// 错误日志列表
-let errorList = []
-// 错误处理回调
-let report = function () {}
-
-const config = {
-  concat: true,
-  delay: 2000, // 错误处理间隔时间
-  maxError: 16, // 异常报错数量限制
-  sampling: 1 // 采样率
-}
 
 // 定义的错误类型码
 const ERROR_RUNTIME = 1
@@ -41,55 +27,6 @@ const LOAD_ERROR_TYPE = {
 }
 const debug = process.env.NODE_ENV === 'development'
 const event = EventEmitter()
-
-function __config (opts) {
-  merge(opts, config)
-  if (!opts.url) throw new Error('不存在url参数')
-  M.server = opts.url
-  if (debug) {
-    config.report = function (error) { console.warn(error) }
-  } else {
-    config.report = function (error) {
-      error = error[0]
-      event.emit('jserror', error)
-      M.log({
-        profile: 'log',
-        type: error.type,
-        channel: 'frontend',
-        message: error.desc,
-        data: error
-      })
-    }
-  }
-  report = debounce(config.report, config.delay, function () {
-    errorList = []
-  })
-}
-
-function __init () {
-  // 监听 JavaScript 报错异常(JavaScript runtime error)
-  window.onerror = function () {
-    if (window.ignoreError) {
-      window.ignoreError = false
-      return
-    }
-    handleError(formatRuntimerError.apply(null, arguments))
-  }
-
-  // 监听资源加载错误(JavaScript Scource failed to load)
-  window.addEventListener('error', function (event) {
-    // 过滤 target 为 window 的异常，避免与上面的 onerror 重复
-    var errorTarget = event.target
-    if (errorTarget !== window && errorTarget.nodeName && LOAD_ERROR_TYPE[errorTarget.nodeName.toUpperCase()]) {
-      handleError(formatLoadError(errorTarget))
-    }
-  }, true)
-}
-
-// 处理 try..catch 错误
-function handleTryCatchError (error) {
-  handleError(formatTryCatchError(error))
-}
 
 /**
  * 生成 runtime 错误日志
@@ -138,32 +75,6 @@ function formatTryCatchError (error) {
 }
 
 /**
- * 错误数据预处理
- *
- * @param  {Object} errorLog    错误日志
- */
-function handleError (errorLog) {
-  // 是否延时处理
-  if (!config.concat) {
-    !needReport(config.sampling) || config.report([errorLog])
-  } else {
-    pushError(errorLog)
-    report(errorList)
-  }
-}
-
-/**
- * 往异常信息数组里面添加一条记录
- *
- * @param  {Object} errorLog 错误日志
- */
-function pushError (errorLog) {
-  if (needReport(config.sampling) && errorList.length < config.maxError) {
-    errorList.push(errorLog)
-  }
-}
-
-/**
  * 设置一个采样率，决定是否上报
  *
  * @param  {Number} sampling 0 - 1
@@ -172,11 +83,99 @@ function pushError (errorLog) {
 function needReport (sampling) {
   return Math.random() < (sampling || 1)
 }
-export {
-  __config,
-  __init,
-  event,
-  tryJS,
-  handleError,
-  formatTryCatchError
+class CaptureErrorAbstract {
+  constructor (opts) {
+    this.errorList = [] // 错误数据的收集数组
+    this.config = {
+      concat: false, // 默认不合并 单条发送
+      delay: 2000, // 错误处理间隔时间
+      maxError: 16, // 异常报错数量限制
+      sampling: 1 // 采样率
+    }
+    Object.assign(this.config, opts)
+  }
+  report () {
+    throw new Error('该类必须继承后覆盖使用')
+  }
 }
+class CaptureError extends CaptureErrorAbstract {
+  constructor (opts) {
+    super(opts)
+    if (!opts.url) throw new Error('不存在url参数')
+    Object.assign(this.config, opts)
+
+    M.server = opts.url
+
+    let report = null
+    if (debug) {
+      report = function (error) { console.warn(error) }
+    } else {
+      report = function (error) {
+        error = error[0]
+        event.emit('jserror', error)
+        M.log({
+          profile: 'log',
+          type: error.type,
+          channel: 'frontend',
+          message: error.desc,
+          data: error
+        })
+      }
+    }
+    this.report = debounce(report, this.config.delay, () => {
+      this.errorList = []
+    })
+    this.init()
+  }
+  init () {
+    let self = this
+    // 监听 JavaScript 报错异常(JavaScript runtime error)
+    window.onerror = function () {
+      if (window.ignoreError) {
+        window.ignoreError = false
+        return
+      }
+      self.handleError(formatRuntimerError.apply(null, arguments))
+    }
+
+    // 监听资源加载错误(JavaScript Scource failed to load)
+    window.addEventListener('error', function (event) {
+    // 过滤 target 为 window 的异常，避免与上面的 onerror 重复
+      var errorTarget = event.target
+      if (errorTarget !== window && errorTarget.nodeName && LOAD_ERROR_TYPE[errorTarget.nodeName.toUpperCase()]) {
+        self.handleError(formatLoadError(errorTarget))
+      }
+    }, true)
+
+    setting({ handleTryCatchError: function (error) {
+      self.handleError(formatTryCatchError(error))
+    }})
+  }
+  /**
+ * 错误数据预处理
+ *
+ * @param  {Object} errorLog    错误日志
+ */
+  handleError (errorLog) {
+  // 是否延时处理
+    if (!this.config.concat) {
+      !needReport(this.config.sampling) || this.report([errorLog])
+    } else {
+      this.pushError(errorLog)
+      this.report(this.errorList)
+    }
+  }
+
+  /**
+ * 往异常信息数组里面添加一条记录
+ *
+ * @param  {Object} errorLog 错误日志
+ */
+  pushError (errorLog) {
+    if (needReport(this.config.sampling) && this.errorList.length < this.config.maxError) {
+      this.errorList.push(errorLog)
+    }
+  }
+}
+export {formatTryCatchError, event}
+export default CaptureError
