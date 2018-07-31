@@ -46,6 +46,7 @@ npm install error-tracker --save
 import ErrorTracker from 'error-tracker'
 
 ErrorTracker.config({
+    debug: 1, // 为1的话是在调试栏里输出，默认为0，直接发射
     name: 'example_site'
     url: 'https://xxx.xxxxx.xx'
 })
