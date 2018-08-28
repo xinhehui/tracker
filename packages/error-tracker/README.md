@@ -1,5 +1,5 @@
 ## 简介
-
+#### [文档语雀](https://www.yuque.com/rx36r5/qahuie/df1pgq)
 通过对 error 事件的监听，获取异常相关信息并缓存，在一定时间之后报告处理。
 
 ## 功能
@@ -46,6 +46,7 @@ npm install error-tracker --save
 import ErrorTracker from 'error-tracker'
 
 ErrorTracker.config({
+    debug: 1, // 为1的话是在调试栏里输出，默认为0，直接发射
     name: 'example_site'
     url: 'https://xxx.xxxxx.xx'
 })
@@ -60,7 +61,7 @@ import VuePlugin from 'error-tracker/plugins/vue'
 ErrorTracker.config({
     name: 'example_site'
     url: 'https://xxx.xxxxx.xx'
-}).use(VuePlugin， Vue)
+}).useVue(Vue)
 ```
 
 ### API
@@ -112,34 +113,31 @@ var ERROR_CONSOLE = 7
 var ERROR_TRY_CATCH = 8
 ```
 
-### try..catch 捕获
-
-jstracker 暴露出一个 `tryJS` 对象，可以处理 try..catch 包裹等
-
-#### 将函数使用 try..catch 包装
-
-```javascript
-import ErrorTracker from 'error-tracker';
-
-this.handleSelect = ErrorTracker.tryJS.wrap(this.handleSelect);
+#### 接口 
+**on 可以监听错误的暴露** 
 ```
-
-#### 只包装参数
-
-```javascript
-function test(type, callback) {
-  // ...
-  callback()
-}
-
-(ErrorTracker.tryJS.wrapArgs(test))(4, function() {
-  a = b
+window.errorTracker.on("jserror", function (jserror) {
+  console.log(jserror)
 })
 ```
-
-这时候只对参数进行 try..catch 包装
-
-
-## todo
-husky 在 lerna 下的问题
-https://github.com/yyx990803/yorkie
+这个接口在使用时应该不会用到，加上去是因为在测试时或者本地情况不会真正发送请求，通过这个接口得到真实传递的数据
+#### **once 仅可以监听一次**
+#### **off 取消错误监听事件**
+#### **wrapErrors  对一些需要用try catch包装的地方可以使用这个简单的函数**
+【使用方法】
+```
+window.errorTracker.wrapErrors(function () {
+  new Array(-1)
+})
+```
+**log 通用发送接口**
+【使用方法】这个例子是说某些情况我们记录一些特定的异常事件来发送到远端
+```
+if (location.search.indexOf("hmsr") === -1) {
+  window.errorTracker.log({
+    type: 'NOHMSR',
+    desc: '没有hmsr参数'
+  })
+}
+```
+**error 类似于log，不过这个需要传递的是error对象**

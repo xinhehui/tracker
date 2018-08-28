@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title></title>
+	<style type="text/css">
+	</style>
+<script type="text/javascript" src="../../dist/index.js"></script>
+<script>
+var errorTracker = ErrorTracker.config({
+  // debug: 1,
+  url: 'http://stats-test.xinhehui.com/common/record'
+})
+window.errorTracker.on("jserror", function (jserror) {
+  console.log(jserror)
+})
+</script>
+</head>
+<body>
+  vue demo
+  <div id="app"></div>
+  <img src="sasa.png"/>
+  <img src="sasa1.png"/>
+  <img src="sasa2.png"/>
+  <img src="sasa3.png"/>
+  <img src="sasa4.png"/>
+  <img src="sasa5.png"/>
+  <img src="sasa6.png"/>
+  <img src="sasa7.png"/>
+  <img src="sas8a.png"/>
+  <img src="sas9a.png"/>
+  <img src="sas10a.png"/>
+  <img src="sasa101.png"/>
+<script>
+window.errorTracker.wrapErrors(function () {
+  new Array(-1)
+})
+if (location.search.indexOf("hmsr") === -1) {
+  window.errorTracker.log({
+    type: 'NOHMSR',
+    desc: '没有hmsr参数'
+  })
+}
+try {
+  new Array(-1)
+} catch(e) {
+  window.errorTracker.error
+}
+</script>
+</body>
+</html>

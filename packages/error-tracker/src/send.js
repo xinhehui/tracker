@@ -96,6 +96,10 @@ function param (obj) {
       for (var i = 0, l = obj[k].length; i < l; i++) {
         p.push(k + '=' + encodeURIComponent(escapeString(obj[k][i])))
       }
+    } else if (typeOf(obj[k]) === '[object Object]') {
+      Object.keys(obj[k]).forEach(function (item) {
+        p.push('data[' + item + ']=' + encodeURIComponent(escapeString(obj[k][item])))
+      })
     } else {
       p.push(k + '=' + encodeURIComponent(escapeString(obj[k])))
     }
@@ -123,19 +127,7 @@ var DEFAULT_DATA = {
     (detector.browser.compatible ? '|c' : ''),
   v: version
 }
-function post (url, params, cb) {
-  var http = new window.XMLHttpRequest()
-  http.open('POST', url, true)
-  //Send the proper header information along with the request
-  http.setRequestHeader('Content-type', 'application/x-www-form-urlencoded')
 
-  http.onreadystatechange = function () { //Call a function when the state changes.
-    if (http.readyState == 4 && http.status == 200) {
-      cb(http.responseText)
-    }
-  }
-  http.send(params)
-}
 // 创建 HTTP GET 请求发送数据。
 // @param {String} url, 日志服务器 URL 地址。
 // @param {Object} data, 附加的监控数据。
@@ -158,17 +150,15 @@ function send (host, data, callback) {
     img.onload = img.onerror = img.onabort = null
     img = null
   }
-
+  img.crossOrigin = 'Anonymous'
   img.src = url
-  // post(url, d, function () {
-  //   callback()
-  // })
 }
 
 var sending = false
 /**
  * 分时发送队列中的数据，避免 IE(6) 的连接请求数限制。
  * 这是里逐条发送
+ * 这个是通过数组实现一个队列，依次发动
  */
 function timedSend () {
   if (sending) { return }
@@ -191,15 +181,10 @@ function timedSend () {
     timedSend()
   })
 }
-
-// timedSend 准备好后可以替换 push 方法，自动分时发送。
 var _push = M._DATAS.push
+// timedSend 准备好后可以替换 push 方法，自动分时发送。
 M.log = function () {
   _push.apply(M._DATAS, arguments)
-  timedSend()
-}
-M.logConcat = function (logs) {
-  M._DATAS = M._DATAS.concat(logs)
   timedSend()
 }
 

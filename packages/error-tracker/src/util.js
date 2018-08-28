@@ -8,17 +8,12 @@
  * @return {Function}
  */
 export function debounce (func, delay, callback) {
-  var timer
-
   return function () {
     var context = this
     var args = arguments
-
-    clearTimeout(timer)
-
-    timer = setTimeout(function () {
+    var timer = setTimeout(function () {
       func.apply(context, args)
-
+      clearTimeout(timer)
       !callback || callback()
     }, delay)
   }
